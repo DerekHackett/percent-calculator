@@ -1,73 +1,137 @@
-# React + TypeScript + Vite
+## Percent Studio – Percent calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A small React + TypeScript + Vite app for working with percentages in a few focused ways (part/whole, percent change, reverse percent, and everyday scenarios like tips and discounts).
 
-Currently, two official plugins are available:
+### Prerequisites
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Node.js** 18+ (or any version compatible with Vite 7)
+- **npm** (bundled with Node)
 
-## React Compiler
+### Install dependencies
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Run the app (development)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+Then open the URL printed in the terminal (by default `http://localhost:5173`).
+
+### Build for production
+
+```bash
+npm run build
+```
+
+To preview the production build locally:
+
+```bash
+npm run preview
+```
+
+### Linting
+
+```bash
+npm run lint
+```
+
+### Testing
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Run tests with the Vitest UI:
+
+```bash
+npm run test:ui
+```
+
+---
+
+### Running with Docker
+
+You can run the app as a containerized, production-style build using the provided `Dockerfile` and `docker-compose.yml`.
+
+#### Build and run with Docker only
+
+From the project root:
+
+```bash
+docker build -t percent-calculator .
+docker run --rm -p 8080:80 percent-calculator
+```
+
+Then open `http://localhost:8080` in your browser.
+
+#### Using docker-compose
+
+```bash
+docker compose up --build
+```
+
+This will:
+
+- Build the image from the local `Dockerfile`
+- Start the `percent-calculator` service
+- Expose it on `http://localhost:8080`
+
+---
+
+### Architecture overview
+
+At a high level, the app is a single-page React application with a layout shell, a navigation area for selecting calculator modes, and individual calculator panels that use shared input and math utilities.
+
+```mermaid
+flowchart LR
+    Browser["Browser (React SPA)"]
+
+    subgraph App["App.tsx"]
+      Header["Header\n(title, subtitle)"]
+      ModeNav["ModeNav\n(mode pills)"]
+      PanelArea["PanelArea\n(active calculator panel)"]
+    end
+
+    subgraph Calculators["Calculator components"]
+      PctWhole["PercentOfWholeCalculator.tsx"]
+      PctChange["PercentChangeCalculator.tsx"]
+      ReversePct["ReversePercentCalculator.tsx"]
+      Everyday["EverydayScenariosCalculator.tsx"]
+    end
+
+    subgraph Shared["Shared UI + logic"]
+      Inputs["inputs.tsx\nCalculatorShell, NumericField"]
+      Math["percentMath.ts\npure math helpers"]
+    end
+
+    Browser --> App
+    App --> ModeNav
+    App --> PanelArea
+
+    PanelArea --> PctWhole
+    PanelArea --> PctChange
+    PanelArea --> ReversePct
+    PanelArea --> Everyday
+
+    PctWhole --> Inputs
+    PctChange --> Inputs
+    ReversePct --> Inputs
+    Everyday --> Inputs
+
+    PctWhole --> Math
+    PctChange --> Math
+    ReversePct --> Math
+    Everyday --> Math
+```
+
+Key points:
+
+- **`App.tsx`** owns the active mode state and overall layout.
+- **Calculator components** each handle one type of percent workflow and use shared presentation via `CalculatorShell` and `NumericField`.
+- **`percentMath.ts`** contains pure functions for the underlying percentage calculations, making them easy to test with Vitest.
